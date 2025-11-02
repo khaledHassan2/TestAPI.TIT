@@ -18,6 +18,14 @@
       {
          "Name": "[dbo].[Course]",
          "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Stud_Course]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Student]",
+         "ObjectType": 0
       }
    ],
    "UiHint": null,

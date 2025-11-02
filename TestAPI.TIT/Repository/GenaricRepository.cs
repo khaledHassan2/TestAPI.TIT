@@ -19,9 +19,18 @@ namespace TestAPI.TIT.Repository
 
         public void Delete(int id)
         {
-           var entity= _context.Set<TEntity>().Find(id);
-           _context.Remove(entity);
+            var entity = _context.Set<TEntity>().Find(id);
+            if (entity == null)
+                throw new Exception($"Entity with id {id} not found");
+
+            _context.Set<TEntity>().Remove(entity);
         }
+        public void Delete(TEntity entity)
+        {
+            _context.Set<TEntity>().Remove(entity);
+        }
+
+
 
         public List<TEntity> GetAll()
         {
@@ -33,10 +42,7 @@ namespace TestAPI.TIT.Repository
           return  _context.Set<TEntity>().Find(id);
         }
 
-        //public TEntity GetByName(string name)
-        //{
-        //    return _context.Set<TEntity>().FirstOrDefault(c => c.Crs_Name == name);
-        //}
+       
 
         public void Update(TEntity entity)
         {

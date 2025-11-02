@@ -2,34 +2,62 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace TestAPI.TIT.Models;
 
-public partial class ITI_newContext : DbContext
+public partial class ITI_newContext : IdentityDbContext<ApplicationUser>
 {
-    public ITI_newContext()
-    {
-    }
 
     public ITI_newContext(DbContextOptions<ITI_newContext> options)
-        : base(options)
+            : base(options)
     {
     }
 
     public virtual DbSet<Course> Courses { get; set; }
 
-//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    public virtual DbSet<Stud_Course> Stud_Courses { get; set; }
+
+    public virtual DbSet<Student> Students { get; set; }
+
+   // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Data Source=.;Initial Catalog=ITI_new;Integrated Security=True;TrustServerCertificate=Ture");
+//        => optionsBuilder.UseSqlServer("Data Source=.;Initial Catalog=ITI_new;Integrated Security=True;Encrypt=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
 
         modelBuilder.Entity<Course>(entity =>
         {
             entity.Property(e => e.Crs_Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<Stud_Course>(entity =>
+        {
+            entity.HasOne(d => d.Crs).WithMany(p => p.Stud_Courses)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Stud_Course_Course");
+
+            entity.HasOne(d => d.St).WithMany(p => p.Stud_Courses)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Stud_Course_Student");
+        });
+
+        modelBuilder.Entity<Student>(entity =>
+        {
+            entity.ToTable("Student", tb =>
+                {
+                    tb.HasTrigger("trg_prevent_student_delete");
+                    tb.HasTrigger("trg_student_insert_audit");
+                });
+
+            entity.Property(e => e.St_Id).ValueGeneratedNever();
+            entity.Property(e => e.St_Lname).IsFixedLength();
+
+            entity.HasOne(d => d.St_superNavigation).WithMany(p => p.InverseSt_superNavigation).HasConstraintName("FK_Student_Student");
         });
 
         OnModelCreatingPartial(modelBuilder);

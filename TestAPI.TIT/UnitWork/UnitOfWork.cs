@@ -3,24 +3,24 @@ using TestAPI.TIT.Repository;
 
 namespace TestAPI.TIT.UnitWork
 {
-    public class UnitOfWork
+    public class UnitOfWork<TEntity> where TEntity : class
     {
         private readonly ITI_newContext _context;
-        private GenaricRepository<Course>? _courseRepo;
+        private GenaricRepository<TEntity>? _repo;
 
         public UnitOfWork(ITI_newContext context)
         {
             _context = context;
         }
 
-        public GenaricRepository<Course> CourseRepo
+        public GenaricRepository<TEntity> Repository
         {
             get
             {
-                if (_courseRepo == null)
-                    _courseRepo = new GenaricRepository<Course>(_context);
+                if (_repo == null)
+                    _repo = new GenaricRepository<TEntity>(_context);
 
-                return _courseRepo;
+                return _repo;
             }
         }
 
@@ -29,4 +29,5 @@ namespace TestAPI.TIT.UnitWork
             return _context.SaveChanges();
         }
     }
+
 }

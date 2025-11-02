@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using TestAPI.TIT.DTOs;
+using TestAPI.TIT.DTOs.CourseDTOs;
 using TestAPI.TIT.Models;
 using TestAPI.TIT.UnitWork;
 
@@ -12,11 +12,11 @@ namespace TestAPI.TIT.Controllers
     [ApiController]
     public class CourseController : ControllerBase
     {
-        //private readonly ITI_newContext _context;
-        private readonly UnitOfWork  _unitOfWork;
+      
+        private readonly UnitOfWork<Course>  _unitOfWork;
 
 
-        public CourseController(UnitOfWork unitOfWork)
+        public CourseController(UnitOfWork<Course> unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
@@ -24,10 +24,8 @@ namespace TestAPI.TIT.Controllers
         [HttpGet(Name = "GetAllCurses")]
         public async Task<IActionResult> GetAll()
         {
-            //var res=await _context.Courses.ToListAsync();
-            //return Ok(res);
-            // var Courses =await _context.Courses.ToListAsync();
-             var Courses = _unitOfWork.CourseRepo.GetAll();
+           
+             var Courses = _unitOfWork.Repository.GetAll();
 
 
             List<GetAllCursesDTO> _courses = new List<GetAllCursesDTO>();
@@ -48,9 +46,7 @@ namespace TestAPI.TIT.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-
-            //var res = await _context.Courses.FindAsync(id);
-            var res =  _unitOfWork.CourseRepo.GetById(id);
+            var res =  _unitOfWork.Repository.GetById(id);
 
             if (res == null)
                 return BadRequest();
@@ -59,9 +55,7 @@ namespace TestAPI.TIT.Controllers
         [HttpGet("{name}")]
         public async Task<IActionResult> GetByName(string name)
         {
-
-            //  var res = await _context.Courses.FirstOrDefaultAsync(c=>c.Crs_Name==name);
-              var res =  _unitOfWork.CourseRepo.GetAll().FirstOrDefault(c=>c.Crs_Name==name);
+              var res =  _unitOfWork.Repository.GetAll().FirstOrDefault(c=>c.Crs_Name==name);
 
             if (res==null)
                 return NotFound();
@@ -70,28 +64,19 @@ namespace TestAPI.TIT.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-
-            // var res = await _context.Courses.FindAsync(id);
-            var res = _unitOfWork.CourseRepo.GetById(id);
+            var res = _unitOfWork.Repository.GetById(id);
 
             if (res == null)
                 return NotFound();
 
-            // _context.Courses.Remove(res);
-            //await _context.SaveChangesAsync();
-            _unitOfWork.CourseRepo.Delete(id);
+            _unitOfWork.Repository.Delete(id);
             _unitOfWork.Save();
             return NoContent();
         }
         [HttpPost]
         public IActionResult Create(CreateCourseDTO course)
         {
-            //if (course == null)
-            //    return BadRequest();
-            
-            //_context.Courses.Add(course);
-            //_context.SaveChanges();
-           // return Created();
+          
             if (course == null)
                 return BadRequest("null");
             if (!ModelState.IsValid)
@@ -106,9 +91,8 @@ namespace TestAPI.TIT.Controllers
                     Top_Id = course.Top_Id
                 };
 
-                //_context.Courses.Add(cours);
-                //_context.SaveChanges();
-                _unitOfWork.CourseRepo.Create(cours);
+             
+                _unitOfWork.Repository.Create(cours);
                 _unitOfWork.Save();
                 return Created();
             }
@@ -122,10 +106,7 @@ namespace TestAPI.TIT.Controllers
             
             if (updated == null)
                 return BadRequest();
-            
-            //_context.Update(updated);
-            //_context.SaveChanges();
-            _unitOfWork.CourseRepo.Update(updated);
+            _unitOfWork.Repository.Update(updated);
             _unitOfWork.Save();
             return Ok("Updeted");
         }

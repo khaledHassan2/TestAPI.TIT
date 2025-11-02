@@ -20,4 +20,7 @@ public partial class Course
     public int? Crs_Duration { get; set; }
 
     public int? Top_Id { get; set; }
+
+    [InverseProperty("Crs")]
+    public virtual ICollection<Stud_Course> Stud_Courses { get; set; } = new List<Stud_Course>();
 }

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TestAPI.TIT.DTOs
+namespace TestAPI.TIT.DTOs.CourseDTOs
 {
     public class GetAllCursesDTO
     {

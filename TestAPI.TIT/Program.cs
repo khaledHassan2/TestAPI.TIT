@@ -1,5 +1,8 @@
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using TestAPI.TIT.Models;
 using TestAPI.TIT.Repository;
 using TestAPI.TIT.UnitWork;
@@ -12,38 +15,66 @@ namespace TestAPI.TIT
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
 
             builder.Services.AddControllers();
-            builder.Services.AddDbContext<ITI_newContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-            builder.Services.AddCors(
-    op =>
+            builder.Services.AddControllers()
+    .AddJsonOptions(x =>
     {
-        op.AddPolicy("AllowOrigin",
-            p =>
-            {
-                p.AllowAnyOrigin();
-                //p.WithOrigins()
-                p.AllowAnyHeader();
-                p.AllowAnyMethod();
-                //p.WithMethods()
-            });
-    }
-    );
+        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        x.JsonSerializerOptions.WriteIndented = true;
+    });
+          
+            builder.Services.AddDbContext<ITI_newContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ITI_newContext>()
+                .AddDefaultTokenProviders();
+
+            
+            var key = builder.Configuration["Jwt:Key"];
+            builder.Services.AddAuthentication(opt =>
+            {
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(opt =>
+            {
+                opt.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                };
+            });
+
+            
+            builder.Services.AddCors(op =>
+            {
+                op.AddPolicy("AllowOrigin", p =>
+                {
+                    p.AllowAnyOrigin();
+                    p.AllowAnyHeader();
+                    p.AllowAnyMethod();
+                });
+            });
+
+          
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+          
+            builder.Services.AddScoped(typeof(IGenaricRepository<>), typeof(GenaricRepository<>));
+            builder.Services.AddScoped(typeof(UnitOfWork<>));
 
-            //  builder.Services.AddScoped(typeof(IGenaricRepository<Course>), typeof(GenaricRepository<Course>));
-              builder.Services.AddScoped(typeof(IGenaricRepository<>), typeof(GenaricRepository<>));
-
-            builder.Services.AddScoped<UnitOfWork>();
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -52,9 +83,12 @@ namespace TestAPI.TIT
 
             app.UseHttpsRedirection();
 
+           
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseCors("AllowOrigin");
+
             app.MapControllers();
 
             app.Run();
